@@ -1,0 +1,17 @@
+body{
+    font-family: system-ui, sans-serif;
+    background: #1c1c1c;
+    color: #eee;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+#video {
+    width: 100%;
+    display: block;
+}
+
+#info {
+    color: #ffb300;
+}
