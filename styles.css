@@ -1,4 +1,4 @@
-body{
+body {
     font-family: system-ui, sans-serif;
     background: #1c1c1c;
     color: #eee;
@@ -7,9 +7,22 @@ body{
     padding: 1rem;
 }
 
+/* The canvas sits on top of the video to draw the boxes */
+#scene {
+    position: relative;
+    width: 100%;
+}
+
 #video {
     width: 100%;
     display: block;
+}
+
+#canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
 }
 
 #info {
