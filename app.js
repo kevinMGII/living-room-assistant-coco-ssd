@@ -1,13 +1,28 @@
 const video = document.getElementById('video');
+const info = document.getElementById('info');
 
-// Request access to the camera and show it in the video element
-async function startCamera() {
+let model;
+
+async function start() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     video.srcObject = stream;
+    await new Promise(resolve => video.onloadedmetadata = resolve);
+
+    info.textContent = 'Loading model...';
+    model = await cocoSsd.load();
+    info.textContent = '';
+    detectLoop();
   } catch (error) {
-    info.textContent = 'Error accessing camera: ' + error.message;
+    info.textContent = 'Error: ' + error.message;
   }
 }
 
-startCamera();
+// Runs the model on every frame
+async function detectLoop() {
+  const detections = await model.detect(video);
+  console.log(detections);
+  requestAnimationFrame(detectLoop);
+}
+
+start();
