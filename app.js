@@ -1,3 +1,26 @@
+// COCO-SSD class name -> label shown on screen
+const LIVING_ROOM_OBJECTS = {
+  'tv': 'tv',
+  'couch': 'sofa',
+  'remote': 'remote',
+  'chair': 'chair',
+  'dining table': 'table',
+  'potted plant': 'plant',
+  'laptop': 'laptop',
+  'mouse': 'mouse',
+  'keyboard': 'keyboard',
+  'cell phone': 'phone',
+  'book': 'book',
+  'cup': 'cup',
+  'wine glass': 'wine glass',
+  'clock': 'clock',
+  'vase': 'vase',
+};
+
+// Minimum confidence. The remote is small, so we ask less of it.
+const MIN_SCORE = 0.5;
+const MIN_SCORE_REMOTE = 0.3;
+
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -21,7 +44,6 @@ async function start() {
     video.srcObject = stream;
     await new Promise(resolve => video.onloadedmetadata = resolve);
 
-    // The canvas must have the same size as the video frames
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
@@ -35,11 +57,17 @@ async function start() {
 }
 
 async function detectLoop() {
-  const detections = await model.detect(video);
+  // Ask for up to 20 objects with at least 0.3 confidence
+  const detections = await model.detect(video, 20, 0.3);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  for (const d of detections) {
-    drawBox(d.bbox, `${d.class} ${Math.round(d.score * 100)}%`, '#00e676');
+  const objects = detections.filter(d =>
+    d.class in LIVING_ROOM_OBJECTS &&
+    d.score >= (d.class === 'remote' ? MIN_SCORE_REMOTE : MIN_SCORE));
+
+  for (const d of objects) {
+    const label = LIVING_ROOM_OBJECTS[d.class];
+    drawBox(d.bbox, `${label} ${Math.round(d.score * 100)}%`, '#00e676');
   }
   requestAnimationFrame(detectLoop);
 }
