@@ -1,30 +1,59 @@
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+/* The page is exactly as tall as the window, so it never scrolls */
 body {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    box-sizing: border-box;
+    padding: 0.5rem 1rem;
+    overflow: hidden;
     font-family: system-ui, sans-serif;
     background: #1c1c1c;
     color: #eee;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 1rem;
 }
 
-/* The canvas sits on top of the video to draw the boxes */
+h1 {
+    margin: 0 0 0.5rem;
+    font-size: 1.2rem;
+}
+
+/* The scene takes all the free space; min-height: 0 lets it shrink */
 #scene {
     position: relative;
-    width: 100%;
+    flex: 1;
+    min-height: 0;
 }
 
-#video {
-    width: 100%;
-    display: block;
-}
-
-#canvas {
+/* Video and canvas share the same box, so the drawings match the image */
+#video, #canvas {
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Alerts float over the bottom of the video */
+#alerts {
+    position: absolute;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.5rem;
+}
+
+.alert {
+    background: rgba(40, 40, 40, 0.9);
+    border-left: 4px solid #ffb300;
+    padding: 0.5rem 0.8rem;
+    margin-top: 0.4rem;
+    border-radius: 4px;
 }
 
 #info {
+    margin: 0.3rem 0 0;
     color: #ffb300;
 }
