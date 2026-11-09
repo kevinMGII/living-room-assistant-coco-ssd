@@ -25,6 +25,12 @@ const MIN_SCORE_REMOTE = 0.3;
 // It is relative to the drink size, so it works whether the camera is close or far.
 const NEAR_FACTOR = 0.5;
 
+// The remote counts as "seen" if it shows up in K of the last N frames.
+// This filters out one-frame false positives.
+const K = 3;
+const N = 10;
+const REMOTE_LOST_MS = 60 * 1000; // 1 minute without seeing it = lost
+
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -32,12 +38,15 @@ const alertsDiv = document.getElementById('alerts');
 const info = document.getElementById('info');
 
 let model;
+let remoteHistory = [];   // true/false for each recent frame
+let lastRemote = null;    // { box, time }
 
-function drawBox(box, text, color) {
+function drawBox(box, text, color, dashed = false) {
   const [x, y, width, height] = box;
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
   ctx.lineWidth = 2;
+  ctx.setLineDash(dashed ? [8, 6] : []);
   ctx.strokeRect(x, y, width, height);
   ctx.font = '16px sans-serif';
   ctx.fillText(text, x + 4, y > 18 ? y - 6 : y + 18);
@@ -62,6 +71,27 @@ function isDrinkNearLaptop(objects) {
     const limit = NEAR_FACTOR * Math.max(drink.bbox[2], drink.bbox[3]);
     return boxDistance(drink.bbox, laptop.bbox) <= limit;
   }));
+}
+
+function trackRemote(objects, personPresent, alerts) {
+  const now = Date.now();
+  const remote = objects
+    .filter(d => d.class === 'remote')
+    .sort((a, b) => b.score - a.score)[0];
+
+  remoteHistory.push(Boolean(remote));
+  if (remoteHistory.length > N) remoteHistory.shift();
+  const confirmed = remoteHistory.filter(Boolean).length >= K;
+
+  if (remote && confirmed) {
+    lastRemote = { box: remote.bbox, time: now };
+  }
+
+  if (lastRemote && personPresent && now - lastRemote.time > REMOTE_LOST_MS) {
+    const minutes = Math.round((now - lastRemote.time) / 60000);
+    alerts.push(`El mando se vio por última vez hace ${minutes} minutos`);
+    drawBox(lastRemote.box, 'last known remote position', '#ffb300', true);
+  }
 }
 
 async function start() {
@@ -95,7 +125,11 @@ async function detectLoop() {
     drawBox(d.bbox, `${label} ${Math.round(d.score * 100)}%`, '#00e676');
   }
 
+  // The person is not drawn, we only need to know if someone is there
+  const personPresent = detections.some(d => d.class === 'person' && d.score >= MIN_SCORE);
+
   const alerts = [];
+  trackRemote(objects, personPresent, alerts);
   if (isDrinkNearLaptop(objects)) {
     alerts.push('Cuidado: tienes una bebida muy cerca del portátil.');
   }
