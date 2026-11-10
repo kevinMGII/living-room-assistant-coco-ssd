@@ -47,6 +47,9 @@ let lastRemote = null;    // { box, time }
 let presenceSince = null;
 let lastPersonSeen = null;
 
+let frameCount = 0;
+let lastFpsTime = 0;
+
 function drawBox(box, text, color, dashed = false) {
   const [x, y, width, height] = box;
   ctx.strokeStyle = color;
@@ -132,7 +135,8 @@ async function start() {
 
     info.textContent = 'Loading model...';
     model = await cocoSsd.load();
-    info.textContent = '';
+    info.textContent = `Backend: ${tf.getBackend()} | FPS: ...`;
+    lastFpsTime = performance.now();
     detectLoop();
   } catch (error) {
     info.textContent = 'Error: ' + error.message;
@@ -162,6 +166,18 @@ async function detectLoop() {
   }
   remindBreak(personPresent, alerts);
   showAlerts(alerts);
+
+  // Update FPS approximately once per second.
+  frameCount++;
+  const now = performance.now();
+  const elapsed = now - lastFpsTime;
+
+  if (elapsed >= 1000) {
+    const fps = frameCount * 1000 / elapsed;
+    info.textContent = `Backend: ${tf.getBackend()} | FPS: ${fps.toFixed(1)}`;
+    frameCount = 0;
+    lastFpsTime = now;
+  }
 
   requestAnimationFrame(detectLoop);
 }
