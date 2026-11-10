@@ -31,6 +31,9 @@ const K = 3;
 const N = 10;
 const REMOTE_LOST_MS = 60 * 1000; // 1 minute without seeing it = lost
 
+const BREAK_REMINDER_MS = 30 * 60 * 1000; // 30 minutes of presence
+const PERSON_ABSENT_MS = 10 * 1000; // Ignore brief missed detections
+
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -40,6 +43,9 @@ const info = document.getElementById('info');
 let model;
 let remoteHistory = [];   // true/false for each recent frame
 let lastRemote = null;    // { box, time }
+
+let presenceSince = null;
+let lastPersonSeen = null;
 
 function drawBox(box, text, color, dashed = false) {
   const [x, y, width, height] = box;
@@ -94,6 +100,27 @@ function trackRemote(objects, personPresent, alerts) {
   }
 }
 
+function remindBreak(personPresent, alerts) {
+  const now = Date.now();
+
+  // Reset the timer after 10 seconds without detecting anyone.
+  if (lastPersonSeen !== null && now - lastPersonSeen >= PERSON_ABSENT_MS) {
+    presenceSince = null;
+    lastPersonSeen = null;
+  }
+
+  // Start the session and update the last detection time.
+  if (personPresent) {
+    if (presenceSince === null) presenceSince = now;
+    lastPersonSeen = now;
+  }
+
+  // Show the reminder after 30 minutes of presence.
+  if (presenceSince !== null && now - presenceSince >= BREAK_REMINDER_MS) {
+    alerts.push('Presencia prolongada en el salón. Considera hacer una pausa.');
+  }
+}
+
 async function start() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -133,6 +160,7 @@ async function detectLoop() {
   if (isDrinkNearLaptop(objects)) {
     alerts.push('Cuidado: tienes una bebida muy cerca del portátil.');
   }
+  remindBreak(personPresent, alerts);
   showAlerts(alerts);
 
   requestAnimationFrame(detectLoop);
