@@ -3,24 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Living Room Assistant</title>
+    <title></title>
+
+    <!-- CSS Styling -->
     <link rel="stylesheet" href="styles.css">
+
+    <!-- TensorFlow.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js" type="text/javascript"></script>
+
+    <!-- COCO-SSD -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
 </head>
+
 <body>
     <header>
-        <h1>Living Room Assistant</h1>
+        <h1>📷 Asistente de salón</h1>
+        <span id="cameraTimer">00:00</span>
     </header>
 
     <div id="scene">
-        <video id="video" autoplay muted playsinline></video>
-        <canvas id="canvas"></canvas>
-        <div id="alerts"></div>
+        <div id="cameraView">
+            <button id="btnEnableWebcam" disabled>Activar webcam</button>
+            <video id="video" autoplay muted playsinline width="640" height="480"></video>
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <div id="alertsColumn">
+            <h2>⚠️ Alertas</h2>
+            <div id="alerts"></div>
+        </div>
     </div>
 
-    <p id="info"></p>
+    <p id="outputMessage">Espera a que el modelo COCO-SSD se cargue...</p>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
